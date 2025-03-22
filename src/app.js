@@ -37,6 +37,19 @@ app.delete("/test",(req,res)=>{
     res.send("Deleted successfully");
 })
 
+// in this way we can get parameters from the user 
+// for this the URL will be somthing like this: http://localhost:3001/test?userId=101&name=Ketan
+
+app.get("/test",(req,res)=>{
+    console.log(req.query)
+    res.send({ firstname:"Ketan", Lastname:"gathibandhe" })
+})
+
+//or dynamically we can do this like 
+app.get("/test/:userId/:name/:password",(req,res)=>{
+    console.log(req.params)
+    res.send({ firstname:"Ketan", Lastname:"gathibandhe" })
+})
 app.listen(3001,()=>{
     console.log("liestning to port 3001...")
 })
