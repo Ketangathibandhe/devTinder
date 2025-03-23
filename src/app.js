@@ -50,6 +50,17 @@ app.get("/test/:userId/:name/:password",(req,res)=>{
     console.log(req.params)
     res.send({ firstname:"Ketan", Lastname:"gathibandhe" })
 })
+
+//multiple route handler ,next()
+app.get("/user",(req,res,next)=>{
+    next()
+},(req,res,next)=>{
+    res.send("response2!!")
+},(req,res,next)=>{
+    res.send("response3!!")
+})
+
+
 app.listen(3001,()=>{
     console.log("liestning to port 3001...")
 })
