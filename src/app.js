@@ -87,19 +87,31 @@ app.get("/test/:userId/:name/:password",(req,res)=>{
 
 // instead of writing this middle ware like this we can make a seperate folder for middlewares
 
-const {adminAuth ,userAuth} = require('./middlewares/auth');
-app.use("/admin",adminAuth)
+// const {adminAuth ,userAuth} = require('./middlewares/auth');
+// app.use("/admin",adminAuth)
 
-app.get("/admin/getAlldata",(req,res)=>{
-    res.send("All data sent")
+// app.get("/admin/getAlldata",(req,res)=>{
+//     res.send("All data sent")
+// })
+// app.get("/user",userAuth,(req,res)=>{
+//     res.send("user data sent")
+// })
+// app.get("/admin/deleteUser",(req,res)=>{
+//     res.send("Deleted a user")
+// });
+
+//error handling 
+app.get("/getAlldata",(req,res)=>{
+    //logic of DB call and get user data
+    throw new Error("hjhdjhej")
+    res.send("User data sent")
 })
-app.get("/user",userAuth,(req,res)=>{
-    res.send("user data sent")
-})
-app.get("/admin/deleteUser",(req,res)=>{
-    res.send("Deleted a user")
+
+app.use("/",(err,req,res,next)=>{
+    if(err){
+        res.status(500).send("something went wrong")
+    }
 });
-
 app.listen(3001,()=>{
     console.log("liestning to port 3001...")
 })
