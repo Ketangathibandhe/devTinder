@@ -52,14 +52,53 @@ app.get("/test/:userId/:name/:password",(req,res)=>{
 })
 
 //multiple route handler ,next()
-app.get("/user",(req,res,next)=>{
-    next()
-},(req,res,next)=>{
-    res.send("response2!!")
-},(req,res,next)=>{
-    res.send("response3!!")
-})
+// app.get("/user",(req,res,next)=>{
+//     next()
+// },(req,res,next)=>{
+//     res.send("response2!!")
+// },(req,res,next)=>{
+//     res.send("response3!!")
+// })
 
+//or we can do multiple route handling in the following way 
+// app.get("/user",(req,res,next)=>{
+//     next()
+// });
+// app.get("/user",(req,res,next)=>{
+//     //res.send("response2!!")
+//     next()
+// });
+// app.get("/user",(req,res,next)=>{
+//    res.send("response3!!")
+// })
+
+//middlewares
+
+// app.use("/admin",(req,res,next)=>{
+//     console.log("Admin auth is getting checked!!")
+//     const token = "xyz"
+//     const isAdminAuthorized = token==="xyz";
+//     if(!isAdminAuthorized){
+//         res.status(401).send("Unauthorized request")
+//     }else{
+//         next()
+//     }
+// });
+
+// instead of writing this middle ware like this we can make a seperate folder for middlewares
+
+const {adminAuth ,userAuth} = require('./middlewares/auth');
+app.use("/admin",adminAuth)
+
+app.get("/admin/getAlldata",(req,res)=>{
+    res.send("All data sent")
+})
+app.get("/user",userAuth,(req,res)=>{
+    res.send("user data sent")
+})
+app.get("/admin/deleteUser",(req,res)=>{
+    res.send("Deleted a user")
+});
 
 app.listen(3001,()=>{
     console.log("liestning to port 3001...")
