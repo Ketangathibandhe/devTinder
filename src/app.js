@@ -25,7 +25,8 @@ const app = express();
 //if we use app.use it will match all the api calls
 
 //rather doind app.use we can use app.get to handel only GET http call
-app.get("/page1",(req,res)=>{
+app.get("/ab?cd",(req,res)=>{
+    console.log(req.query)  //localhost:3000/abcd?userid=10&password=1234 will print an {userid:10,password:1234} because it contains query parameter 
     res.send({firsename:"Ketan",lastname:"Gathibandhe"})   //this will handle only GET request 
 })
 
