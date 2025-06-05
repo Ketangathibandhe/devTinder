@@ -58,17 +58,47 @@ const app = express();
 //http methods (POST,PATCH,GET,DELETE)
 //to test our API we use POSTMAN
 
-// multiple route handler
+// multiple route handler or it is also known as middlewares
 
-app.use(
-  "/user",
-  (req, res, next) => {
-    res.send("Response!!!");
-    next();
-  },
-  (req, res) => {
-    res.send("Response 2!!");
-  }
-);
+// app.use(
+//   "/user",
+//   (req, res, next) => {   // this fun will act as a middleware
+//    // res.send("Response!!!");  
+//     next();         
+//   },
+//   (req, res) => {
+//     res.send("Response 2!!");  // and this is actual request handler in this case
+//   }
+// );
+
+// app.listen(3000);
+
+
+//where actuall the middle wares use the following is the example of this 
+
+// app.use("/admin",(req,res,next)=>{                        //this is the middleware for checking the user authorization ,
+//   console.log("The admin auth is getting checked!!")      // but instead of writing like this we create a seprate forder for middlewares this is the clean way of using it 
+//   const token = "xyz";
+//   const isAdminAuth = token ==="xyz"
+//   if(!isAdminAuth){
+//     res.status(401).send("Unauthorized request!!")
+//   }else{
+//     next()
+//   }
+// })
+const {adminauth,paymentauth} = require("./middleware/auth.js")
+app.use("/admin",adminauth)
+app.get("/admin/getdata",(req,res)=>{
+  res.send("All data has been sent")
+})
+app.delete("/admin/delete",(req,res)=>{
+  res.send("The user had been deleted")
+})
+
+app.use("/paycheck",paymentauth)
+app.get("/paycheck/getpaystatus",(req,res)=>{
+  res.send("Payment is successful")
+})
+
 
 app.listen(3000);
