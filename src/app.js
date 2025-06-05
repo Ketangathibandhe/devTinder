@@ -86,19 +86,39 @@ const app = express();
 //     next()
 //   }
 // })
-const {adminauth,paymentauth} = require("./middleware/auth.js")
-app.use("/admin",adminauth)
-app.get("/admin/getdata",(req,res)=>{
-  res.send("All data has been sent")
-})
-app.delete("/admin/delete",(req,res)=>{
-  res.send("The user had been deleted")
+
+
+// const {adminauth,paymentauth} = require("./middleware/auth.js")
+// app.use("/admin",adminauth)
+// app.get("/admin/getdata",(req,res)=>{
+//   res.send("All data has been sent")
+// })
+// app.delete("/admin/delete",(req,res)=>{
+//   res.send("The user had been deleted")
+// })
+
+// app.use("/paycheck",paymentauth)
+// app.get("/paycheck/getpaystatus",(req,res)=>{
+//   res.send("Payment is successful")
+// })
+
+
+//error handling 
+
+app.use("/getUserData",(req,res)=>{
+  try{
+    //logic of fetching the data from the DB
+    throw new Error("gvrhrh");
+    res.send("userdata sent")                            //this is the proper way of handling error
+  }catch{
+    res.status(500).send("Somthing went wrong")
+  }
 })
 
-app.use("/paycheck",paymentauth)
-app.get("/paycheck/getpaystatus",(req,res)=>{
-  res.send("Payment is successful")
+app.use("/",(err,req,res,next)=>{
+  if(err){
+    res.status(500).send("something went wrong")
+  }
 })
-
 
 app.listen(3000);
