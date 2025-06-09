@@ -136,8 +136,9 @@ const express = require("express")
 const { connectDB } = require("./config/database.js")
 const app = express()
 // lets build some APIs
-const User = require('./models/user.js')
+const User = require('./models/user.js');
 app.use(express.json());//this is like a middleware which is provided by the express and it converts the actual JSON into JS objects 
+//built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
 
 app.post("/signup",async(req,res)=>{
     console.log(req.body)
@@ -158,6 +159,33 @@ app.post("/signup",async(req,res)=>{
    }
    catch(err){
     res.status(400).send("Error saving the user :"+ err.message)
+   }
+})
+
+//get user by email
+app.get("/user",async(req,res)=>{
+   const userEmail = req.body.emailId;
+   try{
+    const users = await User.find({emailId:userEmail})
+    if(users.length===0){
+        res.status(404).send("User not found")
+    }
+    else{
+        res.send(users)
+    }
+   }
+   catch(err){
+    res.status(400).send("Something went wrong")
+   }
+})
+//feed-API GET/feed all the users for the database
+app.get("/feed",async(req,res)=>{
+    try{
+    const users = await User.find({})
+        res.send(users)
+    }
+   catch(err){
+    res.status(400).send("Something went wrong")
    }
 })
 
