@@ -137,18 +137,24 @@ const { connectDB } = require("./config/database.js")
 const app = express()
 // lets build some APIs
 const User = require('./models/user.js')
+app.use(express.json());//this is like a middleware which is provided by the express and it converts the actual JSON into JS objects 
+
 app.post("/signup",async(req,res)=>{
+    console.log(req.body)
     //creating instance of user model
-   const user = new User({
-    firstName:"Ketan",
-    lastName:"Gathibandhe",
-    emailId:"ketangathibandhe04@gmail.com",
-    password:"1234"
-   })
+   const user = new User(
+//     {
+//     firstName:"Ketan",
+//     lastName:"Gathibandhe",
+//     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body 
+//     password:"1234"
+//    }
+     req.body
+)
    
    try{
     await user.save()
-   res.send("User added successfully!")
+    res.send("User added successfully!")
    }
    catch(err){
     res.status(400).send("Error saving the user :"+ err.message)
