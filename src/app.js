@@ -189,6 +189,32 @@ app.get("/feed",async(req,res)=>{
    }
 })
 
+//now lets make update and delete API 
+
+app.delete("/user",async(req,res)=>{
+    const userId = await req.body.userId
+    try{
+        const user= await User.findByIdAndDelete(userId)
+        res.send("User is successfully deleted!!")
+    }
+     catch(err){
+    res.status(400).send("Something went wrong")
+   }
+})
+
+
+// Api to update the data of the user 
+app.patch("/user",async(req,res)=>{
+  const userId = await req.body.userId
+  const data = req.body
+ try{
+     await User.findByIdAndUpdate(userId,data)
+     res.send("User data updated successfully !")
+ }catch(err){
+    res.status(400).send("Something went wrong")
+   }
+})
+
 connectDB()
     .then(()=>{
         console.log("Database connection established...")
