@@ -195,17 +195,36 @@ app.delete("/user", async (req, res) => {
 });
 
 // Api to update the data of the user
-app.patch("/user", async (req, res) => {
-  const userId = await req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = await req.params?.userId;
   const data = req.body;
+
   try {
-    await User.findByIdAndUpdate(userId, data,{
-        returnDocument:"after",
-        runValidators:true
+    //Api level validation
+    const ALLOWED_UPDATES = [
+      "userId",
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+    ]; //it will only allow to update the keys which are present overhere
+    const isupdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isupdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if(data?.skills.length>10){
+        throw new Error("Update not allowed");
+    }
+    await User.findByIdAndUpdate(userId, data, {
+      returnDocument: "after",
+      runValidators: true,
     });
     res.send("User data updated successfully !");
   } catch (err) {
-    res.status(400).send("Update fail:"+err.message);
+    res.status(400).send("Update fail:" + err.message);
   }
 });
 
