@@ -63,8 +63,8 @@
 // // app.use(
 // //   "/user",
 // //   (req, res, next) => {   // this fun will act as a middleware
-// //    // res.send("Response!!!");  
-// //     next();         
+// //    // res.send("Response!!!");
+// //     next();
 // //   },
 // //   (req, res) => {
 // //     res.send("Response 2!!");  // and this is actual request handler in this case
@@ -73,11 +73,10 @@
 
 // // app.listen(3000);
 
-
-// //where actuall the middle wares use the following is the example of this 
+// //where actuall the middle wares use the following is the example of this
 
 // // app.use("/admin",(req,res,next)=>{                        //this is the middleware for checking the user authorization ,
-// //   console.log("The admin auth is getting checked!!")      // but instead of writing like this we create a seprate forder for middlewares this is the clean way of using it 
+// //   console.log("The admin auth is getting checked!!")      // but instead of writing like this we create a seprate forder for middlewares this is the clean way of using it
 // //   const token = "xyz";
 // //   const isAdminAuth = token ==="xyz"
 // //   if(!isAdminAuth){
@@ -86,7 +85,6 @@
 // //     next()
 // //   }
 // // })
-
 
 // // const {adminauth,paymentauth} = require("./middleware/auth.js")
 // // app.use("/admin",adminauth)
@@ -102,8 +100,7 @@
 // //   res.send("Payment is successful")
 // // })
 
-
-// //error handling 
+// //error handling
 
 // app.use("/getUserData",(req,res)=>{
 //   try{
@@ -132,97 +129,93 @@
 
 //Project
 
-const express = require("express")
-const { connectDB } = require("./config/database.js")
-const app = express()
+const express = require("express");
+const { connectDB } = require("./config/database.js");
+const app = express();
 // lets build some APIs
-const User = require('./models/user.js');
-app.use(express.json());//this is like a middleware which is provided by the express and it converts the actual JSON into JS objects 
+const User = require("./models/user.js");
+app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
 
-app.post("/signup",async(req,res)=>{
-    console.log(req.body)
-    //creating instance of user model
-   const user = new User(
-//     {
-//     firstName:"Ketan",
-//     lastName:"Gathibandhe",
-//     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body 
-//     password:"1234"
-//    }
-     req.body
-)
-   
-   try{
-    await user.save()
-    res.send("User added successfully!")
-   }
-   catch(err){
-    res.status(400).send("Error saving the user :"+ err.message)
-   }
-})
+app.post("/signup", async (req, res) => {
+  console.log(req.body);
+  //creating instance of user model
+  const user = new User(
+    //     {
+    //     firstName:"Ketan",
+    //     lastName:"Gathibandhe",
+    //     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body
+    //     password:"1234"
+    //    }
+    req.body
+  );
+
+  try {
+    await user.save();
+    res.send("User added successfully!");
+  } catch (err) {
+    res.status(400).send("Error saving the user :" + err.message);
+  }
+});
 
 //get user by email
-app.get("/user",async(req,res)=>{
-   const userEmail = req.body.emailId;
-   try{
-    const users = await User.find({emailId:userEmail})
-    if(users.length===0){
-        res.status(404).send("User not found")
+app.get("/user", async (req, res) => {
+  const userEmail = req.body.emailId;
+  try {
+    const users = await User.find({ emailId: userEmail });
+    if (users.length === 0) {
+      res.status(404).send("User not found");
+    } else {
+      res.send(users);
     }
-    else{
-        res.send(users)
-    }
-   }
-   catch(err){
-    res.status(400).send("Something went wrong")
-   }
-})
+  } catch (err) {
+    res.status(400).send("Something went wrong");
+  }
+});
 //feed-API GET/feed all the users for the database
-app.get("/feed",async(req,res)=>{
-    try{
-    const users = await User.find({})
-        res.send(users)
-    }
-   catch(err){
-    res.status(400).send("Something went wrong")
-   }
-})
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (err) {
+    res.status(400).send("Something went wrong");
+  }
+});
 
-//now lets make update and delete API 
+//now lets make update and delete API
 
-app.delete("/user",async(req,res)=>{
-    const userId = await req.body.userId
-    try{
-        const user= await User.findByIdAndDelete(userId)
-        res.send("User is successfully deleted!!")
-    }
-     catch(err){
-    res.status(400).send("Something went wrong")
-   }
-})
+app.delete("/user", async (req, res) => {
+  const userId = await req.body.userId;
+  try {
+    const user = await User.findByIdAndDelete(userId);
+    res.send("User is successfully deleted!!");
+  } catch (err) {
+    res.status(400).send("Something went wrong");
+  }
+});
 
-
-// Api to update the data of the user 
-app.patch("/user",async(req,res)=>{
-  const userId = await req.body.userId
-  const data = req.body
- try{
-     await User.findByIdAndUpdate(userId,data)
-     res.send("User data updated successfully !")
- }catch(err){
-    res.status(400).send("Something went wrong")
-   }
-})
+// Api to update the data of the user
+app.patch("/user", async (req, res) => {
+  const userId = await req.body.userId;
+  const data = req.body;
+  try {
+    await User.findByIdAndUpdate(userId, data,{
+        returnDocument:"after",
+        runValidators:true
+    });
+    res.send("User data updated successfully !");
+  } catch (err) {
+    res.status(400).send("Update fail:"+err.message);
+  }
+});
 
 connectDB()
-    .then(()=>{
-        console.log("Database connection established...")
-        app.listen(3000,()=>{
-          console.log("listening on port 3000....")
-        })
-    })
-    .catch((err)=>{
-        console.error("Database cannot be connected!!")
-    })
-
+  .then(() => {
+    console.log("Database connection established...");
+    app.listen(3000, () => {
+      console.log("listening on port 3000....");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected!!");
+  });
