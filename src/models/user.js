@@ -13,10 +13,22 @@ const userSchema = new mongoose.Schema({
     unique: true, // email id will be unique now and will now allow 2 users with the same emialid
     lowercase: true,
     trim:true,
+    validate(value){
+        var validator = require('validator');    //this is a standard npm validator which makes validation easy
+     if(!validator.isEmail(value)){
+        throw new Error("Email is not valid :"+ value)
+     }
+    }
   },
   passWord: {
     type: String,
     required: true,
+   validate(value){
+        var validator = require('validator');    //this is a standard npm validator which makes validation easy
+     if(!validator.isStrongPassword(value)){
+        throw new Error("Enter a strong password :"+ value)
+     }
+    }
   },
   age: {
     type: Number,
