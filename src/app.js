@@ -134,29 +134,69 @@ const { connectDB } = require("./config/database.js");
 const app = express();
 // lets build some APIs
 const User = require("./models/user.js");
+const { validateSignUpData } = require("./utils/validation.js"); //helper function or validator function
+const bcrypt = require("bcrypt"); //used for encrypting password
+
 app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
 
 app.post("/signup", async (req, res) => {
-  console.log(req.body);
-  //creating instance of user model
-  const user = new User(
-    //     {
-    //     firstName:"Ketan",
-    //     lastName:"Gathibandhe",
-    //     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body
-    //     password:"1234"
-    //    }
-    req.body
-  );
+  // console.log(req.body);
 
   try {
+    //validation of data
+    validateSignUpData(req);
+
+    // Encrypt the password  for this we use a npm library called nmp bcrypt
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10); // Store hash in your password DB.
+    console.log(passwordHash);
+
+    //creating instance of user model
+    const user = new User(
+      //     {
+      //     firstName:"Ketan",
+      //     lastName:"Gathibandhe",
+      //     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body
+      //     password:"1234"
+      //    }
+      // req.body  this is not the correct way
+      {
+        firstName,
+        lastName,
+        emailId,
+        password: passwordHash,
+      }
+    );
+
     await user.save();
     res.send("User added successfully!");
   } catch (err) {
     res.status(400).send("Error saving the user :" + err.message);
   }
 });
+
+//login API
+
+app.post("/login",async (req,res)=>{
+try {
+    const { emailId , password} =req.body;
+  const user = await User.findOne({ emailId : emailId})
+  if(!user){
+    throw new Error("Invalid credentials !")
+  }
+
+  const isPasswordValid= await bcrypt.compare(password, user.password)
+  if(isPasswordValid){
+    res.send("User logged in successfully !")
+ 
+  }else{
+       throw new Error("Invalid credentials !")
+  }
+} catch (err) {
+   res.status(400).send("Something went wrong " + err.message);
+}
+})
 
 //get user by email
 app.get("/user", async (req, res) => {
@@ -208,15 +248,15 @@ app.patch("/user/:userId", async (req, res) => {
       "gender",
       "age",
       "skills",
-    ]; //it will only allow to update the keys which are present overhere
+    ]; //it will only allow to update the keys which are present over here
     const isupdateAllowed = Object.keys(data).every((k) =>
       ALLOWED_UPDATES.includes(k)
     );
     if (!isupdateAllowed) {
       throw new Error("Update not allowed");
     }
-    if(data?.skills.length>10){
-        throw new Error("Update not allowed");
+    if (data?.skills.length > 10) {
+      throw new Error("Update not allowed");
     }
     await User.findByIdAndUpdate(userId, data, {
       returnDocument: "after",

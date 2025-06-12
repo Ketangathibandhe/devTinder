@@ -3,6 +3,8 @@ const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true, // if this info is not there then will not be added to the database
+    minLength:2,
+    maxLength:30
   },
   lastName: {
     type: String,
@@ -20,7 +22,7 @@ const userSchema = new mongoose.Schema({
      }
     }
   },
-  passWord: {
+  password: {
     type: String,
     required: true,
    validate(value){
