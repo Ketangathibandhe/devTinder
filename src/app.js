@@ -132,13 +132,16 @@
 const express = require("express");
 const { connectDB } = require("./config/database.js");
 const app = express();
-// lets build some APIs
 const User = require("./models/user.js");
 const { validateSignUpData } = require("./utils/validation.js"); //helper function or validator function
-const bcrypt = require("bcrypt"); //used for encrypting password
-
+const bcrypt = require("bcrypt"); //library used for encrypting password
+const cookieParser = require("cookie-parser");
 app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
+
+app.use(cookieParser()); //this is the middleware used to read cookie
+
+const jwt = require("jsonwebtoken"); //jsonwebtoken (JWT) is a powerful library to make or send token to the web
 
 app.post("/signup", async (req, res) => {
   // console.log(req.body);
@@ -147,7 +150,7 @@ app.post("/signup", async (req, res) => {
     //validation of data
     validateSignUpData(req);
 
-    // Encrypt the password  for this we use a npm library called nmp bcrypt
+    // Encrypt the password  for this we use a npm library called bcrypt
     const { firstName, lastName, emailId, password } = req.body;
     const passwordHash = await bcrypt.hash(password, 10); // Store hash in your password DB.
     console.log(passwordHash);
@@ -160,7 +163,7 @@ app.post("/signup", async (req, res) => {
       //     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body
       //     password:"1234"
       //    }
-      // req.body  this is not the correct way
+      // req.body  //this is not the correct way
       {
         firstName,
         lastName,
@@ -178,25 +181,53 @@ app.post("/signup", async (req, res) => {
 
 //login API
 
-app.post("/login",async (req,res)=>{
-try {
-    const { emailId , password} =req.body;
-  const user = await User.findOne({ emailId : emailId})
-  if(!user){
-    throw new Error("Invalid credentials !")
-  }
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid credentials !");
+    }
 
-  const isPasswordValid= await bcrypt.compare(password, user.password)
-  if(isPasswordValid){
-    res.send("User logged in successfully !")
- 
-  }else{
-       throw new Error("Invalid credentials !")
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      //create a JWT token
+      const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790");
+      // console.log(token);
+      //Add the token to the cookie and send the response back to user
+      res.cookie("token", token);
+      res.send("User logged in successfully !");
+    } else {
+      throw new Error("Invalid credentials !");
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong " + err.message);
   }
-} catch (err) {
-   res.status(400).send("Something went wrong " + err.message);
-}
-})
+});
+
+//profile API
+
+app.get("/profile", async (req, res) => {
+ try{
+   const cookies = req.cookies; //in order to read this cookie we will require a middleware called cookie-parser which is provided by npm
+  const { token } = cookies;
+  if(!token){
+    throw new Error("Invalid Token");
+  }
+  //Validate token
+  const decodeMessage = await jwt.verify(token, "DEV@Tinder$790");
+  const { _id } = decodeMessage;
+  // console.log("Logged in user is :" + _id);
+  const user = await User.findById(_id);
+  if(!user){
+    throw new Error("User does not exist !")
+  }
+  res.send(user);
+
+ }catch(err){
+  res.status(400).send("Error :" + err.message);
+ }
+});
 
 //get user by email
 app.get("/user", async (req, res) => {
