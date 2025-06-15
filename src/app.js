@@ -135,13 +135,16 @@ const app = express();
 const User = require("./models/user.js");
 const { validateSignUpData } = require("./utils/validation.js"); //helper function or validator function
 const bcrypt = require("bcrypt"); //library used for encrypting password
-const cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser"); //cookies ko JavaScript object me convert kar deta hai taaki unhe easily access kiya ja sake.
+
 app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
 
 app.use(cookieParser()); //this is the middleware used to read cookie
 
-const jwt = require("jsonwebtoken"); //jsonwebtoken (JWT) is a powerful library to make or send token to the web
+const jwt = require("jsonwebtoken"); //jsonwebtoken (JWT) is a powerful library to generate and verify JWT
+
+const { userAuth } = require("./middleware/auth.js");
 
 app.post("/signup", async (req, res) => {
   // console.log(req.body);
@@ -192,10 +195,10 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
       //create a JWT token
-      const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790");
+      const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790" ,{expiresIn:"1d"});
       // console.log(token);
       //Add the token to the cookie and send the response back to user
-      res.cookie("token", token);
+      res.cookie("token", token ,{expires:new Date(Date.now()+8*3600000)});
       res.send("User logged in successfully !");
     } else {
       throw new Error("Invalid credentials !");
@@ -207,96 +210,102 @@ app.post("/login", async (req, res) => {
 
 //profile API
 
-app.get("/profile", async (req, res) => {
- try{
-   const cookies = req.cookies; //in order to read this cookie we will require a middleware called cookie-parser which is provided by npm
-  const { token } = cookies;
-  if(!token){
-    throw new Error("Invalid Token");
-  }
-  //Validate token
-  const decodeMessage = await jwt.verify(token, "DEV@Tinder$790");
-  const { _id } = decodeMessage;
-  // console.log("Logged in user is :" + _id);
-  const user = await User.findById(_id);
-  if(!user){
-    throw new Error("User does not exist !")
-  }
-  res.send(user);
-
- }catch(err){
-  res.status(400).send("Error :" + err.message);
- }
-});
-
-//get user by email
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const users = await User.find({ emailId: userEmail });
-    if (users.length === 0) {
-      res.status(404).send("User not found");
-    } else {
-      res.send(users);
-    }
+    // const cookies = req.cookies; //in order to read this cookie we will require a middleware called cookie-parser which is provided by npm
+    // const { token } = cookies;
+    // if (!token) {
+    //   throw new Error("Invalid Token");
+    // }
+    // //Validate token
+    // const decodeMessage = await jwt.verify(token, "DEV@Tinder$790");
+    // const { _id } = decodeMessage;
+    // // console.log("Logged in user is :" + _id);
+    // const user = await User.findById(_id);
+    // if (!user) {
+    //   throw new Error("User does not exist !");
+    // }
+    const user = req.user;
+    res.send(user);
   } catch (err) {
-    res.status(400).send("Something went wrong");
-  }
-});
-//feed-API GET/feed all the users for the database
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (err) {
-    res.status(400).send("Something went wrong");
+    res.status(400).send("Error :" + err.message);
   }
 });
 
-//now lets make update and delete API
+// //get user by email
+// app.get("/user", async (req, res) => {
+//   const userEmail = req.body.emailId;
+//   try {
+//     const users = await User.find({ emailId: userEmail });
+//     if (users.length === 0) {
+//       res.status(404).send("User not found");
+//     } else {
+//       res.send(users);
+//     }
+//   } catch (err) {
+//     res.status(400).send("Something went wrong");
+//   }
+// });
+// //feed-API GET/feed all the users for the database
+// app.get("/feed", async (req, res) => {
+//   try {
+//     const users = await User.find({});
+//     res.send(users);
+//   } catch (err) {
+//     res.status(400).send("Something went wrong");
+//   }
+// });
 
-app.delete("/user", async (req, res) => {
-  const userId = await req.body.userId;
-  try {
-    const user = await User.findByIdAndDelete(userId);
-    res.send("User is successfully deleted!!");
-  } catch (err) {
-    res.status(400).send("Something went wrong");
-  }
-});
+// //now lets make update and delete API
 
-// Api to update the data of the user
-app.patch("/user/:userId", async (req, res) => {
-  const userId = await req.params?.userId;
-  const data = req.body;
+// app.delete("/user", async (req, res) => {
+//   const userId = await req.body.userId;
+//   try {
+//     const user = await User.findByIdAndDelete(userId);
+//     res.send("User is successfully deleted!!");
+//   } catch (err) {
+//     res.status(400).send("Something went wrong");
+//   }
+// });
 
-  try {
-    //Api level validation
-    const ALLOWED_UPDATES = [
-      "userId",
-      "photoUrl",
-      "about",
-      "gender",
-      "age",
-      "skills",
-    ]; //it will only allow to update the keys which are present over here
-    const isupdateAllowed = Object.keys(data).every((k) =>
-      ALLOWED_UPDATES.includes(k)
-    );
-    if (!isupdateAllowed) {
-      throw new Error("Update not allowed");
-    }
-    if (data?.skills.length > 10) {
-      throw new Error("Update not allowed");
-    }
-    await User.findByIdAndUpdate(userId, data, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-    res.send("User data updated successfully !");
-  } catch (err) {
-    res.status(400).send("Update fail:" + err.message);
-  }
+// // Api to update the data of the user
+// app.patch("/user/:userId", async (req, res) => {
+//   const userId = await req.params?.userId;
+//   const data = req.body;
+
+//   try {
+//     //Api level validation
+//     const ALLOWED_UPDATES = [
+//       "userId",
+//       "photoUrl",
+//       "about",
+//       "gender",
+//       "age",
+//       "skills",
+//     ]; //it will only allow to update the keys which are present over here
+//     const isupdateAllowed = Object.keys(data).every((k) =>
+//       ALLOWED_UPDATES.includes(k)
+//     );
+//     if (!isupdateAllowed) {
+//       throw new Error("Update not allowed");
+//     }
+//     if (data?.skills.length > 10) {
+//       throw new Error("Update not allowed");
+//     }
+//     await User.findByIdAndUpdate(userId, data, {
+//       returnDocument: "after",
+//       runValidators: true,
+//     });
+//     res.send("User data updated successfully !");
+//   } catch (err) {
+//     res.status(400).send("Update fail:" + err.message);
+//   }
+// });
+
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  //sending connection req
+  const user = req.user
+  res.send(user.firstName+" sent connection request..");
 });
 
 connectDB()
