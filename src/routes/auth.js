@@ -1,4 +1,4 @@
-const express = require("express")
+const express = require("express");
 const authRouter = express.Router();
 const User = require("../models/user.js");
 const { validateSignUpData } = require("../utils/validation.js"); //helper function or validator function
@@ -13,7 +13,7 @@ authRouter.post("/signup", async (req, res) => {
     // Encrypt the password  for this we use a npm library called bcrypt
     const { firstName, lastName, emailId, password } = req.body;
     const passwordHash = await bcrypt.hash(password, 10); // Store hash in your password DB.
-    
+
     //creating instance of user model
     const user = new User(
       //     {
@@ -47,14 +47,19 @@ authRouter.post("/login", async (req, res) => {
     }
 
     // const isPasswordValid = await bcrypt.compare(password, user.password);
-      const isPasswordValid = await user.validatePassword(password, user.password)
+    const isPasswordValid = await user.validatePassword(
+      password,
+      user.password
+    );
     if (isPasswordValid) {
       //create a JWT token
       // const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790" ,{expiresIn:"1d"});
-      const token = await user.getJWT()
+      const token = await user.getJWT();
       // console.log(token);
       //Add the token to the cookie and send the response back to user
-      res.cookie("token", token ,{expires:new Date(Date.now()+8*3600000)});
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
       res.send("User logged in successfully !");
     } else {
       throw new Error("Invalid credentials !");
@@ -64,5 +69,14 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
+authRouter.post("/logout", async (req, res) => {
+  try {
+    res
+      .cookie("token", null, { expires: new Date(Date.now()) })
+      .send("Logged out successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong " + err.message);
+  }
+});
 
-module.exports= authRouter;
+module.exports = authRouter;
