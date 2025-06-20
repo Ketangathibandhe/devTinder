@@ -132,107 +132,99 @@
 const express = require("express");
 const { connectDB } = require("./config/database.js");
 const app = express();
-const User = require("./models/user.js");
-const { validateSignUpData } = require("./utils/validation.js"); //helper function or validator function
-const bcrypt = require("bcrypt"); //library used for encrypting password
 const cookieParser = require("cookie-parser"); //cookies ko JavaScript object me convert kar deta hai taaki unhe easily access kiya ja sake.
-
 app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
-
 app.use(cookieParser()); //this is the middleware used to read cookie
 
-const jwt = require("jsonwebtoken"); //jsonwebtoken (JWT) is a powerful library to generate and verify JWT
+//we added this routes into routers therefore we dont need it here 
+// app.post("/signup", async (req, res) => {
+//   // console.log(req.body);
 
-const { userAuth } = require("./middleware/auth.js");
+//   try {
+//     //validation of data
+//     validateSignUpData(req);
 
-app.post("/signup", async (req, res) => {
-  // console.log(req.body);
+//     // Encrypt the password  for this we use a npm library called bcrypt
+//     const { firstName, lastName, emailId, password } = req.body;
+//     const passwordHash = await bcrypt.hash(password, 10); // Store hash in your password DB.
+//     console.log(passwordHash);
 
-  try {
-    //validation of data
-    validateSignUpData(req);
+//     //creating instance of user model
+//     const user = new User(
+//       //     {
+//       //     firstName:"Ketan",
+//       //     lastName:"Gathibandhe",
+//       //     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body
+//       //     password:"1234"
+//       //    }
+//       // req.body  //this is not the correct way
+//       {
+//         firstName,
+//         lastName,
+//         emailId,
+//         password: passwordHash,
+//       }
+//     );
 
-    // Encrypt the password  for this we use a npm library called bcrypt
-    const { firstName, lastName, emailId, password } = req.body;
-    const passwordHash = await bcrypt.hash(password, 10); // Store hash in your password DB.
-    console.log(passwordHash);
-
-    //creating instance of user model
-    const user = new User(
-      //     {
-      //     firstName:"Ketan",
-      //     lastName:"Gathibandhe",
-      //     emailId:"ketangathibandhe04@gmail.com",    //this is hard coded and is exactly same as req.body
-      //     password:"1234"
-      //    }
-      // req.body  //this is not the correct way
-      {
-        firstName,
-        lastName,
-        emailId,
-        password: passwordHash,
-      }
-    );
-
-    await user.save();
-    res.send("User added successfully!");
-  } catch (err) {
-    res.status(400).send("Error saving the user :" + err.message);
-  }
-});
+//     await user.save();
+//     res.send("User added successfully!");
+//   } catch (err) {
+//     res.status(400).send("Error saving the user :" + err.message);
+//   }
+// });
 
 //login API
 
-app.post("/login", async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-    const user = await User.findOne({ emailId: emailId });
-    if (!user) {
-      throw new Error("Invalid credentials !");
-    }
+// app.post("/login", async (req, res) => {
+//   try {
+//     const { emailId, password } = req.body;
+//     const user = await User.findOne({ emailId: emailId });
+//     if (!user) {
+//       throw new Error("Invalid credentials !");
+//     }
 
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
-      const isPasswordValid = await user.validatePassword(password, user.password)
-    if (isPasswordValid) {
-      //create a JWT token
-      // const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790" ,{expiresIn:"1d"});
-      const token = await user.getJWT()
-      // console.log(token);
-      //Add the token to the cookie and send the response back to user
-      res.cookie("token", token ,{expires:new Date(Date.now()+8*3600000)});
-      res.send("User logged in successfully !");
-    } else {
-      throw new Error("Invalid credentials !");
-    }
-  } catch (err) {
-    res.status(400).send("Something went wrong " + err.message);
-  }
-});
+//     // const isPasswordValid = await bcrypt.compare(password, user.password);
+//       const isPasswordValid = await user.validatePassword(password, user.password)
+//     if (isPasswordValid) {
+//       //create a JWT token
+//       // const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790" ,{expiresIn:"1d"});
+//       const token = await user.getJWT()
+//       // console.log(token);
+//       //Add the token to the cookie and send the response back to user
+//       res.cookie("token", token ,{expires:new Date(Date.now()+8*3600000)});
+//       res.send("User logged in successfully !");
+//     } else {
+//       throw new Error("Invalid credentials !");
+//     }
+//   } catch (err) {
+//     res.status(400).send("Something went wrong " + err.message);
+//   }
+// });
 
 //profile API
 
-app.get("/profile", userAuth, async (req, res) => {
-  try {
-    // const cookies = req.cookies; //in order to read this cookie we will require a middleware called cookie-parser which is provided by npm
-    // const { token } = cookies;
-    // if (!token) {
-    //   throw new Error("Invalid Token");
-    // }
-    // //Validate token
-    // const decodeMessage = await jwt.verify(token, "DEV@Tinder$790");
-    // const { _id } = decodeMessage;
-    // // console.log("Logged in user is :" + _id);
-    // const user = await User.findById(_id);
-    // if (!user) {
-    //   throw new Error("User does not exist !");
-    // }
-    const user = req.user;
-    res.send(user);
-  } catch (err) {
-    res.status(400).send("Error :" + err.message);
-  }
-});
+// app.get("/profile", userAuth, async (req, res) => {
+//   try {
+//     // const cookies = req.cookies; //in order to read this cookie we will require a middleware called cookie-parser which is provided by npm
+//     // const { token } = cookies;
+//     // if (!token) {
+//     //   throw new Error("Invalid Token");
+//     // }
+//     // //Validate token
+//     // const decodeMessage = await jwt.verify(token, "DEV@Tinder$790");
+//     // const { _id } = decodeMessage;
+//     // // console.log("Logged in user is :" + _id);
+//     // const user = await User.findById(_id);
+//     // if (!user) {
+//     //   throw new Error("User does not exist !");
+//     // }
+//     const user = req.user;
+//     res.send(user);
+//   } catch (err) {
+//     res.status(400).send("Error :" + err.message);
+//   }
+// });
 
 // //get user by email
 // app.get("/user", async (req, res) => {
@@ -304,11 +296,22 @@ app.get("/profile", userAuth, async (req, res) => {
 //   }
 // });
 
-app.post("/sendConnectionRequest", userAuth, async (req, res) => {
-  //sending connection req
-  const user = req.user
-  res.send(user.firstName+" sent connection request..");
-});
+// app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+//   //sending connection req
+//   const user = req.user
+//   res.send(user.firstName+" sent connection request..");
+// });
+
+// importing all the routers 
+
+const authRouter = require("./routes/auth.js");
+const profileRouter = require("./routes/profile.js");
+const requestRouter = require("./routes/request.js");
+
+
+app.use("/",authRouter);
+app.use("/",profileRouter);
+app.use("/",requestRouter);
 
 connectDB()
   .then(() => {
