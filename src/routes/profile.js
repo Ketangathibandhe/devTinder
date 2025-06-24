@@ -1,7 +1,10 @@
-const express = require("express")
+const express = require("express");
 const profileRouter = express.Router();
 const { userAuth } = require("../middleware/auth.js");
-const {validateEditProfileData} = require("../utils/validation.js")
+const { validateEditProfileData } = require("../utils/validation.js");
+const User = require("../models/user.js");
+const bcrypt = require("bcrypt");
+const validator = require("validator"); //this is a standard npm validator which makes validation easy
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
@@ -25,22 +28,54 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/profile/edit", userAuth , async(req,res)=>{
-    try {
-        if(!validateEditProfileData){
-            throw new Error("Invalid Edit Request!")
-        }
-
-        const loggedInUser = req.user
-        Object.keys(req.body).forEach((key)=>(loggedInUser[key]=req.body[key]))
-       await loggedInUser.save()
-        res.json({
-            message:"Profile updated successfully",
-            Data:loggedInUser
-        })
-    } catch (err) {
-         res.status(400).send("Error :" + err.message);
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
+  try {
+    if (!validateEditProfileData) {
+      throw new Error("Invalid Edit Request!");
     }
-})
 
-module.exports = profileRouter
+    const loggedInUser = req.user;
+    Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
+    await loggedInUser.save();
+    res.json({
+      message: "Profile updated successfully",
+      Data: loggedInUser,
+    });
+  } catch (err) {
+    res.status(400).send("Error :" + err.message);
+  }
+});
+
+profileRouter.patch("/profile/forgotPassword", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    // Validate input
+    if (!emailId || !password) {
+      return res.status(400).send("Email and password are required");
+    }
+    // Find user by email
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      return res
+        .status(200)
+        .send("If the account exists, password has been reset."); // Don't reveal if user exists
+    }
+
+    if (!validator.isStrongPassword(password)) {
+      throw new Error("Enter a strong password : " + password + " is too weak");
+    } else {
+      // Hash new password
+      var passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    // Update password
+    user.password = passwordHash;
+    await user.save();
+
+    res.send("Password reset successful");
+  } catch (err) {
+    res.status(500).send("Error :" + err.message);
+  }
+});
+
+module.exports = profileRouter;
