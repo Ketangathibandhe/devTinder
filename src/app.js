@@ -307,11 +307,15 @@ app.use(cookieParser()); //this is the middleware used to read cookie
 const authRouter = require("./routes/auth.js");
 const profileRouter = require("./routes/profile.js");
 const requestRouter = require("./routes/request.js");
+const userRouter = require("./routes/user.js");
 
 
 app.use("/",authRouter);
 app.use("/",profileRouter);
 app.use("/",requestRouter);
+app.use("/",userRouter);
+
+
 
 connectDB()
   .then(() => {
