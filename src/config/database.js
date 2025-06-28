@@ -13,3 +13,4 @@ await mongoose.connect("mongodb+srv://ketan:l40c1rBPQ95qaIyi@cluster0.b7jzqx6.mo
 
 //we will use this in app.js
 module.exports={connectDB}
+

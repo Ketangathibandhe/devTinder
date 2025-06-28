@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
   emailId: {
     type: String,
     required: true,
-    unique: true, // email id will be unique now and will now allow 2 users with the same emialid
+    unique: true, // email id will be unique now and will not allow 2 users with the same emialid
     lowercase: true,
     trim:true,
     validate(value){
