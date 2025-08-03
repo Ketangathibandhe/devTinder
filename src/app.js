@@ -132,10 +132,19 @@
 const express = require("express");
 const { connectDB } = require("./config/database.js");
 const app = express();
+
+const cors = require("cors")  // this is a npm package also a middleware which is used to handle CORS error 
 const cookieParser = require("cookie-parser"); //cookies ko JavaScript object me convert kar deta hai taaki unhe easily access kiya ja sake.
 app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
 app.use(cookieParser()); //this is the middleware used to read cookie
+
+app.use(cors({
+  origin:"http://localhost:5173",
+   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  credentials:true,
+}))
+
 
 //we added this routes into routers therefore we dont need it here 
 // app.post("/signup", async (req, res) => {

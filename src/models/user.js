@@ -37,14 +37,16 @@ const userSchema = new mongoose.Schema({
   age: {
     type: Number,
     min:18,
+    default:18,
   },
   gender: {
     type: String,
+  
     validate:function(value){
         if(!["male","female","other"].includes(value)){
             throw new Error("Gender data is not valid")
         }
-    }
+    },
   },
   photoUrl: {
     type: String,
@@ -52,6 +54,7 @@ const userSchema = new mongoose.Schema({
   },
   about:{
     type: String,
+    default:"I am using devTinder app",
   },
   skills:{
     type: [String],
