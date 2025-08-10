@@ -133,7 +133,17 @@ const express = require("express");
 const { connectDB } = require("./config/database.js");
 const app = express();
 
-const cors = require("cors")  // this is a npm package also a middleware which is used to handle CORS error 
+const cors = require("cors"); // this is a npm package also a middleware which is used to handle CORS error
+
+// const corsOptions = {
+//   origin: "http://localhost:5173",
+//   methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+//   allowedHeaders: ["Content-Type", "Authorization"],
+//   credentials: true,
+// };
+
+// app.use(cors(corsOptions));
+
 const cookieParser = require("cookie-parser"); //cookies ko JavaScript object me convert kar deta hai taaki unhe easily access kiya ja sake.
 app.use(express.json()); //this is like a middleware which is provided by the express and it converts the actual JSON into JS objects
 //built-in middleware function hai Express.js ka jo incoming request body JSON format se JS object me parse karta hai.
@@ -145,8 +155,7 @@ app.use(cors({
   credentials:true,
 }))
 
-
-//we added this routes into routers therefore we dont need it here 
+//we added this routes into routers therefore we dont need it here
 // app.post("/signup", async (req, res) => {
 //   // console.log(req.body);
 
@@ -311,20 +320,17 @@ app.use(cors({
 //   res.send(user.firstName+" sent connection request..");
 // });
 
-// importing all the routers 
+// importing all the routers
 
 const authRouter = require("./routes/auth.js");
 const profileRouter = require("./routes/profile.js");
 const requestRouter = require("./routes/request.js");
 const userRouter = require("./routes/user.js");
 
-
-app.use("/",authRouter);
-app.use("/",profileRouter);
-app.use("/",requestRouter);
-app.use("/",userRouter);
-
-
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
+app.use("/", userRouter);
 
 connectDB()
   .then(() => {
